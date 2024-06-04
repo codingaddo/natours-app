@@ -1,0 +1,21 @@
+const express = require('express');
+const {
+  getAllTours,
+  getTour,
+  updateTour,
+  createTour,
+  deleteTour,
+  checkId,
+  checkBody,
+  aliasTopTours,
+} = require('../controllers/tourController');
+
+const router = express.Router();
+
+// router.param('id', checkId); // Parameter Middleware
+router.route('/top-5-tour').get(aliasTopTours, getAllTours);
+
+router.route('/').get(getAllTours).post(createTour);
+router.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
+
+module.exports = router;
