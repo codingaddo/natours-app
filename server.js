@@ -2,6 +2,14 @@ const mongoose = require('mongoose');
 
 const dotenv = require('dotenv');
 
+//Handling UncaughtException
+process.on('uncaughtException', (err) => {
+  console.log('Uncaught Exception');
+  console.log(err.name, err.message);
+  //Stopping the app from running
+  process.exit(1);
+});
+
 dotenv.config({ path: './config.env' }); //To include development env files
 const app = require('./app');
 
@@ -16,10 +24,21 @@ mongoose
     // useFindAndModify: false,
     // useUnifiedTopology: true,
   })
-  .then(() => console.log('DB connection successful'))
+  .then(() => console.log('DB connection successful'));
 
 const port = 3000;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`App is running on port ${port}...`);
 });
 
+//Handling unhandled promises such as fail to connect with the database
+process.on('unhandledRejection', (err) => {
+  console.log('Unhandled Rejection shutting down');
+  console.log(err.name, err.message);
+  //Stopping the app from running
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+console.log(process.env.NODE_ENV);
