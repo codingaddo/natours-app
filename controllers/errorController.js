@@ -6,10 +6,16 @@ const handleCastErrorDB = (err) => {
 };
 
 const handleDuplicateFielDB = (err) => {
-  // const value = err;
-  const message = `Duplicate field value of ${err} , please use another value`;
+  const msg = err.errmsg;
+  const message = `Duplicate field value of ${msg} , please use another value`;
   return new AppError(message, 400);
 };
+
+const handleJwtError = (err) =>
+  new AppError('Invalid Token. Please log in again', 401);
+
+const handleJwtExpiredToken = (err) =>
+  new AppError('Your Token has expired login again.', 401);
 
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
@@ -45,14 +51,14 @@ module.exports = (err, req, res, next) => {
     sendErrorDev(err, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
-    if (error.name === 'CastError') error = handleCastErrorDB(error);
-    if (error) {
-      error.code === 11000;
-      const msg = error.errmsg;
-      error = handleDuplicateFielDB(msg);
-    }
+    if (error && error.name === 'CastError') error = handleCastErrorDB(error);
+    if (error && error.code === 11000) error = handleDuplicateFielDB(error);
 
-    if (error.name === 'CastError') error = handleCastErrorDB(error);
+    if (error && error.name === 'JsonWebTokenError')
+      error = handleJwtError(error);
+
+    if (error && error.name === 'TokenExpiredError')
+      error = handleJwtExpiredToken(error);
 
     sendErrorProd(error, res);
   }

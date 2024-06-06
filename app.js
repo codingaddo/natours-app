@@ -18,6 +18,7 @@ app.use(express.static(`${__dirname}/public`)); //reading a static file
 app.use((req, res, next) => {
   console.log('hello from the middleware');
   req.requesTime = new Date().toISOString();
+  console.log(req.headers);
   next();
 });
 
