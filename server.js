@@ -10,7 +10,7 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-dotenv.config({ path: './config.env' }); //To include development env files
+dotenv.config({ path: './config.env' }); //To include development env files/ variables
 const app = require('./app');
 
 const DB = process.env.DATABASE.replace(
