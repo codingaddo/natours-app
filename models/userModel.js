@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
   photo: {
     type: String,
     default: 'default.jpg',
@@ -58,7 +63,14 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-//Comparing passwords to sign users into the app
+//Update passwordChangeAt field after updating your password
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
+//Comparing password in database to the posted password to sign users into the app
 userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword,
@@ -79,6 +91,13 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   return false;
 };
 
+///Not showing list of inactive users
+//The is a query middleware and it points to the current query
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
+
 //creating a token for password reset
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
@@ -88,7 +107,7 @@ userSchema.methods.createPasswordResetToken = function () {
     .update(resetToken)
     .digest('hex');
 
-  console.log({ resetToken }, this.passwordResetToken);
+  // console.log({ resetToken }, this.passwordResetToken);
 
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
