@@ -110,6 +110,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+//using virtual population to get the reviews of a tour without refrencing it in the tour schema
+tourSchema.virtual('reviews', {
+  ref: 'Review', //The model we are referencing
+  foreignField: 'tour', //Tour is foreign field in the review model
+  localField: '_id',
+});
+
 //DOCUMENT MIDDLEWARE
 //It run on the save() and create( command)
 //The call back function would be called before a document is saved into the database
@@ -133,6 +140,14 @@ tourSchema.pre('save', function (next) {
 tourSchema.pre(/^find/, function (next) {
   this.find({ secreteTour: { $ne: true } });
   this.start = Date.now();
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt -passwordResetToken -passwordResetExpires',
+  });
   next();
 });
 
