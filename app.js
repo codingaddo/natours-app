@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 const morgan = require('morgan'); //Third party middleware
 const app = express();
 app.set('view engine', 'pug'); //A view engine for creating templates to display the results of query
@@ -12,6 +13,7 @@ app.set('views', path.join(__dirname, 'views'));
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
@@ -34,6 +36,7 @@ app.use('/api', limiter);
 
 //Body parser, reading data from the body into req.body
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser());
 
 //Data Sanitization against NoSQL injection
 app.use(mongoSanitize());
@@ -63,17 +66,12 @@ app.use(express.static(path.join(__dirname, 'public'))); //reading a static file
 app.use((req, res, next) => {
   console.log('hello from the middleware');
   req.requesTime = new Date().toISOString();
-  console.log(req.headers);
+  // console.log(req.cookies);
   next();
 });
 
-app.get('/', (req, res) => {
-  res.status(200).render('base', {
-    tour: 'The Forest Hiker',
-    user: 'Mike',
-  });
-});
 ////Mounting routers ///
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);

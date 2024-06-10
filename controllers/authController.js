@@ -80,6 +80,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   // console.log(token);
 
@@ -110,6 +112,35 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   //Grant access to the rout
   req.user = currentUser;
+  next();
+});
+
+//A middleware to protect the tours from unauthorize access
+exports.isLggedIn = catchAsync(async (req, res, next) => {
+  //1) Getting token and check of it's there
+  if (req.cookies.jwt) {
+    //2) Verification of the token
+    const decoded = await promisify(jwt.verify)(
+      req.cookies.jwt,
+      process.env.JWT_SECRET,
+    );
+    // console.log(decoded);
+
+    //3) Check if user still exists
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
+      return next();
+    }
+
+    //4) Check if user changed password after the token was issued
+    if (currentUser.changedPasswordAfter(decoded.iat)) {
+      return next();
+    }
+
+    //There is a logged in user
+    res.locals.user = currentUser;
+    return next();
+  }
   next();
 });
 
