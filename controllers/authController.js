@@ -71,6 +71,17 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+//Log out a user
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000), //Expires in 10seconds
+    httpOnly: true,
+  });
+  res.status(200).json({
+    status: 'Success',
+  });
+};
+
 //A middleware to protect the tours from unauthorize access
 exports.protect = catchAsync(async (req, res, next) => {
   //1) Getting token and check of it's there
@@ -116,33 +127,37 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 //A middleware to protect the tours from unauthorize access
-exports.isLggedIn = catchAsync(async (req, res, next) => {
+exports.isLggedIn = async (req, res, next) => {
   //1) Getting token and check of it's there
   if (req.cookies.jwt) {
-    //2) Verification of the token
-    const decoded = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET,
-    );
-    // console.log(decoded);
+    try {
+      //2) Verification of the token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET,
+      );
+      // console.log(decoded);
 
-    //3) Check if user still exists
-    const currentUser = await User.findById(decoded.id);
-    if (!currentUser) {
+      //3) Check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return next();
+      }
+
+      //4) Check if user changed password after the token was issued
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      //There is a logged in user
+      res.locals.user = currentUser;
+      return next();
+    } catch (err) {
       return next();
     }
-
-    //4) Check if user changed password after the token was issued
-    if (currentUser.changedPasswordAfter(decoded.iat)) {
-      return next();
-    }
-
-    //There is a logged in user
-    res.locals.user = currentUser;
-    return next();
   }
   next();
-});
+};
 
 //Restricting user roles
 exports.restrictTo = (...roles) => {

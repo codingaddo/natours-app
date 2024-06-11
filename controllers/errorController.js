@@ -17,16 +17,23 @@ const handleJwtError = (err) =>
 const handleJwtExpiredToken = (err) =>
   new AppError('Your Token has expired login again.', 401);
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
-  });
+const sendErrorDev = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  } else {
+    res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message,
+    });
+  }
 };
 
-const sendErrorProd = (err, res) => {
+const sendErrorProd = (err, req, res) => {
   //Operational error, send message to client
 
   if (err.isOperational === true) {
@@ -51,6 +58,7 @@ module.exports = (err, req, res, next) => {
     sendErrorDev(err, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
+    error.message = err.message;
     if (error && error.name === 'CastError') error = handleCastErrorDB(error);
     if (error && error.code === 11000) error = handleDuplicateFielDB(error);
 
@@ -60,7 +68,7 @@ module.exports = (err, req, res, next) => {
     if (error && error.name === 'TokenExpiredError')
       error = handleJwtExpiredToken(error);
 
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 
   // next();
