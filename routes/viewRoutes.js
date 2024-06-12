@@ -5,7 +5,12 @@ const {
   getOverview,
   getTour,
   getLoginForm,
+  getAccount,
+  updateUserData,
 } = require('../controllers/viewController');
+
+router.post('/submit-user-data', protect, updateUserData);
+router.get('/me', protect, getAccount);
 
 router.use(isLggedIn);
 router.get('/', getOverview);

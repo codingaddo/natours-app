@@ -17,20 +17,29 @@ const handleJwtError = (err) =>
 const handleJwtExpiredToken = (err) =>
   new AppError('Your Token has expired login again.', 401);
 
-const sendErrorDev = (err, req, res) => {
-  if (req.originalUrl.startsWith('/api')) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      error: err,
-      message: err.message,
-      stack: err.stack,
-    });
-  } else {
-    res.status(err.statusCode).render('error', {
-      title: 'Something went wrong!',
-      msg: err.message,
-    });
-  }
+// const sendErrorDev = (err, req, res) => {
+//   if (req.originalUrl === '/api') {
+//     res.status(err.statusCode).json({
+//       status: err.status,
+//       error: err,
+//       message: err.message,
+//       stack: err.stack,
+//     });
+//   } else {
+//     res.status(err.statusCode).render('error', {
+//       title: 'Something went wrong!',
+//       msg: err.message,
+//     });
+//   }
+// };
+
+const sendErrorDev = (err, res) => {
+  res.status(err.statusCode).json({
+    status: err.status,
+    error: err,
+    message: err.message,
+    stack: err.stack,
+  });
 };
 
 const sendErrorProd = (err, req, res) => {
