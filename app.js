@@ -6,6 +6,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
+const compression = require('compression')
 const morgan = require('morgan'); //Third party middleware
 const app = express();
 app.set('view engine', 'pug'); //A view engine for creating templates to display the results of query
@@ -59,13 +60,14 @@ app.use(
   }),
 );
 
+app.use(compression())
 //Serving static files
 // app.use(express.static(`${__dirname}/public`)); //reading a static file
 app.use(express.static(path.join(__dirname, 'public'))); //reading a static file
 
 //Test  middleware
 app.use((req, res, next) => {
-  console.log('hello from the middleware');
+  // console.log('hello from the middleware');
   req.requesTime = new Date().toISOString();
   // console.log(req.cookies);
   next();

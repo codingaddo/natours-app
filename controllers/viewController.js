@@ -56,5 +56,5 @@ exports.updateUserData = catchAsync(async (req, res, next) => {
     user: updatedUser,
   });
 
-  console.log(req.body);
+  // console.log(req.body);
 });
