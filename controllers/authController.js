@@ -14,7 +14,7 @@ const signToken = (id) => {
 };
 
 //Create and send token via cookie
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode,req, res) => {
   const token = signToken(user._id);
   const cookieOptions = {
     expires: new Date(
@@ -22,9 +22,11 @@ const createSendToken = (user, statusCode, res) => {
     ),
     // secure: true,
     httpOnly: true,
+    // secure:req.secure || req.headers['x-forwarded-proto']==='https'
   };
 
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  // if (req.secure || req.headers['x-forwarded-proto']==='https') cookieOptions.secure = true;
 
   res.cookie('jwt', token, cookieOptions);
 
@@ -53,7 +55,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   // console.log(url);
   await new Email(newUser, url).sendWelcome();
 
-  createSendToken(newUser, 201, res);
+  createSendToken(newUser, 201,req, res);
 });
 
 //Login a use
@@ -72,7 +74,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Incorrect email or password', 401));
   }
   //3)If everything is okay, send token to client
-  createSendToken(user, 200, res);
+  createSendToken(user, 200,req, res);
 });
 
 //Log out a user
@@ -241,7 +243,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // user.changedPasswordAfter(Date.now() - 1000);
 
   //4) Log the user in, send JWT
-  createSendToken(user, 200, res);
+  createSendToken(user, 200,req, res);
 });
 
 //Updating user password. For users who haven't forgotten thier password but wants to change it
@@ -263,7 +265,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   //3) Log the user in, send jwt
-  createSendToken(user, 200, res);
+  createSendToken(user, 200,req, res);
 
   // const token = signToken(user._id);
   // res.status(200).json({

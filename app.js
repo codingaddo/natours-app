@@ -6,9 +6,11 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
-const compression = require('compression')
+const compression = require('compression');
+const cors = requirer('cors')
 const morgan = require('morgan'); //Third party middleware
 const app = express();
+app.enable('trust proxy'); //Testing for security after deployment
 app.set('view engine', 'pug'); //A view engine for creating templates to display the results of query
 app.set('views', path.join(__dirname, 'views'));
 const tourRouter = require('./routes/tourRoutes');
@@ -19,6 +21,17 @@ const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
 //GLOBAL MIDDLEWARE
+//Implementing cors for simple requests
+app.use(cors()) //Everyone
+
+//For other requests like delete, update, etc
+app.options('*',cors())
+
+//implementing cors for our frontend in a different domain
+// app.use(cors({
+//   origin:'front-end-url'
+// }))
+
 //Security HTTP headers
 app.use(helmet());
 
@@ -60,7 +73,7 @@ app.use(
   }),
 );
 
-app.use(compression())
+app.use(compression());
 //Serving static files
 // app.use(express.static(`${__dirname}/public`)); //reading a static file
 app.use(express.static(path.join(__dirname, 'public'))); //reading a static file
