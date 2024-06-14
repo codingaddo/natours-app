@@ -7,7 +7,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
-const cors = requirer('cors')
+const cors = require('cors')
 const morgan = require('morgan'); //Third party middleware
 const app = express();
 app.enable('trust proxy'); //Testing for security after deployment
