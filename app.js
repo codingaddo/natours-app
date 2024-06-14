@@ -23,7 +23,6 @@ const globalErrorHandler = require('./controllers/errorController');
 //GLOBAL MIDDLEWARE
 //Implementing cors for simple requests
 app.use(cors()) //Everyone
-
 //For other requests like delete, update, etc
 app.options('*',cors())
 
